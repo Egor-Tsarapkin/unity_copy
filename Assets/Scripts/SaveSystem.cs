@@ -1,10 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
 using System.IO;
+using UnityEngine;
 
 public static class SaveSystem
 {
     private static string Path =>
         Application.persistentDataPath + "/save.json";
+
+    public static bool HasSave()
+    {
+        return File.Exists(Path);
+    }
 
     public static void Save(GameData data)
     {
@@ -13,7 +19,7 @@ public static class SaveSystem
             File.WriteAllText(Path, JsonUtility.ToJson(data));
             Debug.Log($"[SaveSystem] Сохранено: {Path}");
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"[SaveSystem] Ошибка сохранения: {e.Message}");
         }
@@ -24,16 +30,15 @@ public static class SaveSystem
         try
         {
             if (!File.Exists(Path))
-            {
                 return false;
-            }
 
             JsonUtility.FromJsonOverwrite(File.ReadAllText(Path), data);
-            Debug.Log($"[SaveSystem] Загружено. Уровень: {data.lastUnlockedLevel}");
+            Debug.Log($"[SaveSystem] Загружено: {Path}");
             return true;
         }
-        catch (System.Exception)
+        catch (Exception e)
         {
+            Debug.LogWarning($"[SaveSystem] Ошибка загрузки: {e.Message}");
             return false;
         }
     }
@@ -45,9 +50,9 @@ public static class SaveSystem
             if (!File.Exists(Path)) return;
             File.Delete(Path);
         }
-        catch (System.Exception e)
+        catch (Exception )
         {
-            Debug.LogError($"[SaveSystem] Ошибка удаления: {e.Message}");
+
         }
     }
 }

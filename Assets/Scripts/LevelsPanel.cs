@@ -4,15 +4,18 @@ using UnityEngine.UI;
 
 public class LevelsPanel : MonoBehaviour
 {
-    [SerializeField] private GameData _gameData;
     [SerializeField] private Button[] _levelButtons;
 
-    void OnEnable()
+    private void OnEnable()
     {
+        if (GameProgress.Instance == null) return;
+
+        int lastUnlocked = GameProgress.Instance.LastUnlockedLevel;
+
         for (int i = 0; i < _levelButtons.Length; i++)
         {
             if (_levelButtons[i] == null) continue;
-            _levelButtons[i].interactable = (i + 1) <= _gameData.lastUnlockedLevel;
+            _levelButtons[i].interactable = (i + 1) <= lastUnlocked;
         }
     }
 

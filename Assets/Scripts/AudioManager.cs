@@ -1,18 +1,18 @@
 using UnityEngine;
 using UnityEngine.Audio;
 
+[RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
-    [SerializeField] private GameData _gameData;
     [SerializeField] private AudioMixer _audioMixer;
 
     private AudioSource _musicSource;
 
-    void Awake()
+    private void Awake()
     {
-        if (Instance != null)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
@@ -22,20 +22,24 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         _musicSource = GetComponent<AudioSource>();
+        ApplyVolume();
+    }
 
-        SaveSystem.Load(_gameData);
+    private void Start()
+    {
         ApplyVolume();
     }
 
     public void ApplyVolume()
     {
-        float musicDb = _gameData.musicVolume > 0.001f
-            ? Mathf.Log10(_gameData.musicVolume) * 20f
-            : -80f;
+        if (_audioMixer == null) return;
+        if (GameProgress.Instance == null) return;
 
-        float sfxDb = _gameData.sfxVolume > 0.001f
-            ? Mathf.Log10(_gameData.sfxVolume) * 20f
-            : -80f;
+        float musicV = GameProgress.Instance.MusicVolume;
+        float sfxV = GameProgress.Instance.SfxVolume;
+
+        float musicDb = musicV > 0.001f ? Mathf.Log10(musicV) * 20f : -80f;
+        float sfxDb = sfxV > 0.001f ? Mathf.Log10(sfxV) * 20f : -80f;
 
         _audioMixer.SetFloat("MusicVol", musicDb);
         _audioMixer.SetFloat("SFXVol", sfxDb);
@@ -53,10 +57,5 @@ public class AudioManager : MonoBehaviour
     {
         if (_musicSource != null)
             _musicSource.Stop();
-    }
-
-    void OnApplicationQuit()
-    {
-        SaveSystem.Save(_gameData);
     }
 }

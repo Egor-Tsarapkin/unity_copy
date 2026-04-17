@@ -3,41 +3,51 @@ using UnityEngine.UI;
 
 public class SettingsPanel : MonoBehaviour
 {
-    [SerializeField] private GameData _gameData;
     [SerializeField] private Slider _musicSlider;
     [SerializeField] private Slider _sfxSlider;
 
-    void OnEnable()
-    {
-        _musicSlider.SetValueWithoutNotify(_gameData.musicVolume);
-        _sfxSlider.SetValueWithoutNotify(_gameData.sfxVolume);
+    private bool _subscribed;
 
-        _musicSlider.onValueChanged.AddListener(OnMusicChanged);
-        _sfxSlider.onValueChanged.AddListener(OnSfxChanged);
+    private void OnEnable()
+    {
+        if (GameProgress.Instance == null)
+        {
+            return;
+        }
+
+        _musicSlider.SetValueWithoutNotify(GameProgress.Instance.MusicVolume);
+        _sfxSlider.SetValueWithoutNotify(GameProgress.Instance.SfxVolume);
+
+        if (!_subscribed)
+        {
+            _musicSlider.onValueChanged.AddListener(OnMusicChanged);
+            _sfxSlider.onValueChanged.AddListener(OnSfxChanged);
+            _subscribed = true;
+        }
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        _musicSlider.onValueChanged.RemoveListener(OnMusicChanged);
-        _sfxSlider.onValueChanged.RemoveListener(OnSfxChanged);
+        if (_subscribed)
+        {
+            _musicSlider.onValueChanged.RemoveListener(OnMusicChanged);
+            _sfxSlider.onValueChanged.RemoveListener(OnSfxChanged);
+            _subscribed = false;
+        }
 
-        SaveSystem.Save(_gameData);
+        GameProgress.Instance?.Save();
     }
 
-    void OnMusicChanged(float value)
+    private void OnMusicChanged(float value)
     {
-        _gameData.musicVolume = value;
-
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.ApplyVolume();
+        GameProgress.Instance.SetMusicVolume(value);
+        AudioManager.Instance?.ApplyVolume();
     }
 
-    void OnSfxChanged(float value)
+    private void OnSfxChanged(float value)
     {
-        _gameData.sfxVolume = value;
-
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.ApplyVolume();
+        GameProgress.Instance.SetSfxVolume(value);
+        AudioManager.Instance?.ApplyVolume();
     }
 
     public void Close()
